@@ -3,6 +3,11 @@ const itemSchema = require('../../schemas/item.schema.js')
 const Item = require('../../models/v1/item.model.js')
 
 const getItem = async (req, res) => {
+  const items = await Item.find({ status: true })
+  res.status(200).json({ items: items })
+}
+
+const getAllItems = async (req, res) => {
   const items = await Item.find()
   res.status(200).json({ items: items })
 }
@@ -30,33 +35,54 @@ const createItem = (req, res) => {
   }
 }
 
-const updateItem = (req, res) => {
+const updateItem = async (req, res) => {
   try {
     const { id } = req.params
-    const { name, price } = req.body
-    const index = allItems.findIndex((item) => item.id === Number(id))
-    if (index === -1) {
-      return res.status(404).json({ message: 'Item not found' })
-    }
-    items[index] = { id: Number(id), name, price }
-    res.json(items[index])
+    console.log(id)
+
+    //Validation with zod
+    const result = itemSchema.safeParse(req.body)
+    if (!result.success)
+      res.status(400).json({ error: 'No esta enviado correctamente' })
+    //Update with Mongo DB
+    const updateItem = await Item.findByIdAndUpdate(id, result.data)
+    if (!updateItem) res.status(400).json({ message: 'Item not found' })
+    res.status(200).json(updateItem)
   } catch (error) {
     res.status(400).json({ msg: error.message })
   }
 }
 
-const deleteItem = (req, res) => {
+const inactiveItem = async (req, res) => {
   try {
     const { id } = req.params
-    const index = allItems.findIndex((i) => i.id === Number(id))
-    if (index === -1) {
-      return res.status(404).json({ message: 'Item not found' })
-    }
-    const deleted = allItems.splice(index, 1)
-    res.json({ message: `Item ${id} deleted`, deleted: deleted[0] })
+    const inactiveItem = await Item.findByIdAndUpdate(id, {
+      status: false,
+    })
+    if (!inactiveItem) res.status(404).json({ message: 'Item not found' })
+    res.status(200).json({ msg: 'Item setting to inactive' })
+  } catch (error) {
+    res.status(500).json({ err: error.message })
+  }
+}
+
+const deleteItem = async (req, res) => {
+  try {
+    const { id } = req.params
+    const result = await Item.findByIdAndDelete(id)
+    if (!result) res.status(400).json({ msg: 'Theres an error' })
+    res.status(200).json({ msg: 'Item deleted', result })
   } catch (error) {
     res.status(400).json({ msg: `The error is ${error.message}` })
   }
 }
 
-module.exports = { getItem, createItem, getItemById, updateItem, deleteItem }
+module.exports = {
+  getItem,
+  createItem,
+  getItemById,
+  updateItem,
+  deleteItem,
+  inactiveItem,
+  getAllItems,
+}

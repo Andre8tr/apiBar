@@ -15,6 +15,10 @@ const itemSchema = new Schema({
     type: String,
     default: 'Bebida',
   },
+  status: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const Item = model('Item', itemSchema, 'items')

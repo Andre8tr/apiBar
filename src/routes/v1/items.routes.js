@@ -6,18 +6,16 @@ const {
   getItemById,
   updateItem,
   deleteItem,
+  inactiveItem,
+  getAllItems,
 } = require('../../controllers/v1/item.controller.js')
 
 router.get('/', getItem)
-
-//Get by id
+router.get('/getAllItems', getAllItems)
 router.get('/:id', getItemById)
-
 router.post('/', createItem)
-
 router.put('/:id', updateItem)
-
-router.delete('/:id', deleteItem)
+router.delete('/:id', inactiveItem)
 
 /* 
 router.patch('/:id', (req, res) => {
